@@ -1,21 +1,53 @@
 package main
 
 import (
+	"bufio"
 	"flag"
 	"fmt"
-  "strings"
+	"os"
 )
 
-var msg = flag.String("msg", "デフォルト値", "説明")
-var n int
+var (
+	filename string
+)
 
 func init() {
-	flag.IntVar(&n, "n", 1, "回数")
+	flag.StringVar(&filename, "filename", "", "catしたいファイル名")
+	flag.Parse()
+}
+
+func cat(file string) error {
+
+	fi, err := os.Open(file)
+	if err != nil {
+		return fmt.Errorf("ファイルをひらけませんでした。")
+	}
+	defer fi.Close()
+
+	scanner := bufio.NewScanner(fi)
+	// sfから1行ずつ読み込み、"行数:"を前に付けて標準出力に書き出す。
+	for i := 1; scanner.Scan(); i++ {
+		fmt.Fprintf(os.Stdout, "%d:%s\n", i, scanner.Text())
+	}
+
+	return scanner.Err()
+}
+
+func run() error {
+	args := flag.Args()
+	// 引数チェック
+	if len(args) < 1 {
+		return fmt.Errorf("ファイルを指定してください。")
+	}
+
+	return cat(args[0])
 
 }
 
 func main() {
-	flag.Parse()
-	fmt.Println(strings.Repeat(*msg, n))
+	if err := run(); err != nil {
+		fmt.Fprintf(os.Stderr, "%s\n", err.Error())
+		os.Exit(1)
+	}
 
 }
