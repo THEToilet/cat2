@@ -8,29 +8,36 @@ import (
 )
 
 var (
-	filename string
+	numberFlag bool
 )
 
 func init() {
-	flag.StringVar(&filename, "filename", "", "catしたいファイル名")
+	flag.BoolVar(&numberFlag, "n", false, "show row numbre")
 	flag.Parse()
 }
 
-func cat(file string) error {
+func cat(file ...string) error {
+	for j := 0; j < len(file); j++ {
 
-	fi, err := os.Open(file)
-	if err != nil {
-		return fmt.Errorf("ファイルをひらけませんでした。")
+		fi, err := os.Open(file[j])
+		if err != nil {
+			return fmt.Errorf("ファイルをひらけませんでした。")
+		}
+		defer fi.Close()
+
+		scanner := bufio.NewScanner(fi)
+		if numberFlag {
+			// sfから1行ずつ読み込み、"行数:"を前に付けて標準出力に書き出す。
+			for i := 1; scanner.Scan(); i++ {
+				fmt.Fprintf(os.Stdout, "%d : %s\n", i, scanner.Text())
+			}
+		} else {
+			for i := 1; scanner.Scan(); i++ {
+				fmt.Fprintf(os.Stdout, "%s\n", scanner.Text())
+			}
+		}
 	}
-	defer fi.Close()
-
-	scanner := bufio.NewScanner(fi)
-	// sfから1行ずつ読み込み、"行数:"を前に付けて標準出力に書き出す。
-	for i := 1; scanner.Scan(); i++ {
-		fmt.Fprintf(os.Stdout, "%d:%s\n", i, scanner.Text())
-	}
-
-	return scanner.Err()
+	return nil
 }
 
 func run() error {
@@ -40,7 +47,7 @@ func run() error {
 		return fmt.Errorf("ファイルを指定してください。")
 	}
 
-	return cat(args[0])
+	return cat(args...)
 
 }
 
