@@ -1,2 +1,4 @@
-*cat2
+# cat2
 my cat command :cat:
+## Features
+cat :dog:
